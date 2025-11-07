@@ -29,13 +29,15 @@ export default function RealAPOD() {
                 let errorMessage;
                 switch (response.status) {
                     case 429:
-                        errorMessage = "Rate limit exceeded - switching to demo image";
+                        errorMessage =
+                            "Rate limit exceeded - switching to demo image";
                         break;
                     case 503:
                         errorMessage = "NASA APOD API temporarily unavailable";
                         break;
                     case 500:
-                        errorMessage = "NASA server error - displaying sample image";
+                        errorMessage =
+                            "NASA server error - displaying sample image";
                         break;
                     default:
                         errorMessage = `NASA API error (${response.status}) - using fallback image`;
@@ -49,19 +51,20 @@ export default function RealAPOD() {
         } catch (err) {
             console.warn("APOD API unavailable:", err.message);
             setError(err.message);
-            
+
             // Generate fallback APOD data with sample space imagery
             const fallbackAPOD = {
                 title: "Eagle Nebula Pillars of Creation (Sample)",
-                explanation: "This stunning image shows the famous Pillars of Creation in the Eagle Nebula, captured by the Hubble Space Telescope. These towering columns of gas and dust are stellar nurseries where new stars are born. This is sample imagery displayed while the NASA APOD API is temporarily unavailable.",
+                explanation:
+                    "This stunning image shows the famous Pillars of Creation in the Eagle Nebula, captured by the Hubble Space Telescope. These towering columns of gas and dust are stellar nurseries where new stars are born. This is sample imagery displayed while the NASA APOD API is temporarily unavailable.",
                 url: "https://www.nasa.gov/sites/default/files/thumbnails/image/hubble_birthstars_std_0.jpg",
                 hdurl: "https://www.nasa.gov/sites/default/files/images/hubble_birthstars_hd.jpg",
                 media_type: "image",
-                date: new Date().toISOString().split('T')[0],
+                date: new Date().toISOString().split("T")[0],
                 copyright: "NASA/ESA/Hubble Space Telescope",
-                service_version: "v1"
+                service_version: "v1",
             };
-            
+
             setApod(fallbackAPOD);
         } finally {
             setLoading(false);
@@ -119,7 +122,7 @@ export default function RealAPOD() {
                     </p>
                 </div>
             )}
-            
+
             {/* Header */}
             <div className="p-6 pb-0">
                 <div className="flex items-center justify-between mb-4">
