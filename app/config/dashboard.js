@@ -5,14 +5,33 @@ export const dashboardConfig = {
     // API Configuration
     apis: {
         nasa: {
-            // Get your free API key at https://api.nasa.gov/
-            // Replace 'DEMO_KEY' with your personal key for higher rate limits
-            apiKey: "DEMO_KEY",
+            // Using your personal NASA API key for expanded usage and higher rate limits
+            // Rate limits: 1,000 requests per hour (vs 30/hour for DEMO_KEY)
+            apiKey:
+                process.env.NEXT_PUBLIC_NASA_API_KEY ||
+                "aIWMqFERNcQ8hJ16gAOopWhN0YwpgejVLfV1m2c5",
             endpoints: {
+                // Astronomy & Earth Imagery
                 apod: "https://api.nasa.gov/planetary/apod",
+                epic: "https://api.nasa.gov/EPIC/api/natural", // Earth Polychromatic Imaging Camera
+
+                // Asteroid & Near Earth Objects
                 neo: "https://api.nasa.gov/neo/rest/v1/feed",
+                neoLookup: "https://api.nasa.gov/neo/rest/v1/neo",
+                neoBrowse: "https://api.nasa.gov/neo/rest/v1/neo/browse",
+
+                // Space Weather (DONKI APIs)
+                solarFlares: "https://api.nasa.gov/DONKI/FLR", // Real solar flare data!
+                coronalMassEjections: "https://api.nasa.gov/DONKI/CME",
+                geomagneticStorms: "https://api.nasa.gov/DONKI/GST",
+                solarParticles: "https://api.nasa.gov/DONKI/SEP",
+                notifications: "https://api.nasa.gov/DONKI/notifications",
+
+                // Mars & Planetary
+                mars: "https://api.nasa.gov/insight_weather/", // Historical - InSight ended mission
+
+                // Legacy endpoints for compatibility
                 earth: "https://api.nasa.gov/planetary/earth/imagery",
-                mars: "https://api.nasa.gov/insight_weather/", // Historical
             },
         },
     },

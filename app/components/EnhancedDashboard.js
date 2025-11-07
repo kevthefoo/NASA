@@ -15,10 +15,13 @@ import {
 import RealAPOD from "./RealAPOD";
 import RealNEOTracker from "./RealNEOTracker";
 import SimpleMarsWeather from "./SimpleMarsWeather";
+import RealSolarFlareMonitor from "./RealSolarFlareMonitor";
+import RealEarthImagery from "./RealEarthImagery";
 
 export default function EnhancedDashboard() {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [activeSection, setActiveSection] = useState("overview");
+    const [mounted, setMounted] = useState(false);
     const [liveStats, setLiveStats] = useState({
         issAstronauts: 7,
         solarWindSpeed: 425,
@@ -27,6 +30,7 @@ export default function EnhancedDashboard() {
     });
 
     useEffect(() => {
+        setTimeout(() => setMounted(true), 0);
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
@@ -75,15 +79,15 @@ export default function EnhancedDashboard() {
                     </div>
                     <div className="text-right">
                         <div className="text-3xl font-mono text-blue-400 tracking-wider">
-                            {currentTime.toLocaleTimeString()}
+                            {mounted ? currentTime.toLocaleTimeString() : '--:--:--'}
                         </div>
                         <div className="text-sm text-gray-300">
-                            {currentTime.toLocaleDateString("en-US", {
+                            {mounted ? currentTime.toLocaleDateString("en-US", {
                                 weekday: "long",
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
-                            })}
+                            }) : 'Loading...'}
                         </div>
                     </div>
                 </div>
@@ -247,69 +251,9 @@ export default function EnhancedDashboard() {
                 {activeSection === "apod" && <RealAPOD />}
                 {activeSection === "mars" && <SimpleMarsWeather />}
 
-                {activeSection === "earth" && (
-                    <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                        <h3 className="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
-                            <Globe className="w-6 h-6 text-blue-400" />
-                            Earth from Space
-                        </h3>
-                        <div className="aspect-video bg-linear-to-br from-blue-900/30 to-green-900/30 rounded-lg flex items-center justify-center">
-                            <div className="text-center">
-                                <Globe className="w-16 h-16 text-white/50 mx-auto mb-4 animate-pulse" />
-                                <p className="text-white text-lg">
-                                    Earth Imagery
-                                </p>
-                                <p className="text-gray-400">
-                                    Satellite view coming soon...
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {activeSection === "earth" && <RealEarthImagery />}
 
-                {activeSection === "solar" && (
-                    <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                        <h3 className="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
-                            <Sun className="w-6 h-6 text-yellow-400" />
-                            Solar Activity Monitor
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-white/5 rounded-lg p-4">
-                                <div className="text-center">
-                                    <Activity className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-yellow-400">
-                                        C2.1
-                                    </div>
-                                    <div className="text-sm text-gray-400">
-                                        Latest Solar Flare
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/5 rounded-lg p-4">
-                                <div className="text-center">
-                                    <Zap className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-purple-400">
-                                        2.4
-                                    </div>
-                                    <div className="text-sm text-gray-400">
-                                        Kp Index
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/5 rounded-lg p-4">
-                                <div className="text-center">
-                                    <Sun className="w-8 h-8 text-orange-400 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-orange-400">
-                                        Quiet
-                                    </div>
-                                    <div className="text-sm text-gray-400">
-                                        Solar Weather
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {activeSection === "solar" && <RealSolarFlareMonitor />}
             </div>
 
             {/* Status Footer */}
@@ -329,7 +273,7 @@ export default function EnhancedDashboard() {
                     </div>
                     <div className="text-gray-400">
                         🚀 Ready for YouTube Streaming • Last updated:{" "}
-                        {currentTime.toLocaleTimeString()}
+                        {mounted ? currentTime.toLocaleTimeString() : '--:--:--'}
                     </div>
                 </div>
             </div>
