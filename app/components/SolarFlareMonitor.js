@@ -1,399 +1,361 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Zap, Sun, AlertTriangle, Activity, BarChart3 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+    Sun,
+    Activity,
+    AlertTriangle,
+    Clock,
+    Zap,
+    TrendingUp,
+} from "lucide-react";
 import {
     LineChart,
     Line,
     XAxis,
     YAxis,
     CartesianGrid,
+    Tooltip,
     ResponsiveContainer,
-    AreaChart,
-    Area,
+    BarChart,
+    Bar,
 } from "recharts";
+import { dashboardConfig } from "../config/dashboard";
 
-export default function SolarFlareMonitor() {
-    const [solarData, setSolarData] = useState(null);
+const RealSolarFlareMonitor = () => {
+    const [flareData, setFlareData] = useState([]);
+    const [recentFlares, setRecentFlares] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [flareHistory, setFlareHistory] = useState([]);
-    const [staticFlares, setStaticFlares] = useState([]);
+    const [error, setError] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
 
-    const generateSolarData = useCallback(() => {
-        // Simulate solar activity data
-        const now = new Date();
-        const history = [];
+    const processFlareData = useCallback((flares) => {
+        // Sort flares by date
+        const sortedFlares = flares.sort(
+            (a, b) => new Date(a.beginTime) - new Date(b.beginTime)
+        );
 
-        // Generate 24 hours of data
-        for (let i = 23; i >= 0; i--) {
-            const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-            history.push({
-                time: time.toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                }),
-                timestamp: time.getTime(),
-                xrayFlux: Math.random() * 0.0001 + 0.00001, // Simulated X-ray flux
-                protonFlux: Math.random() * 100 + 10, // Simulated proton flux
-                kpIndex: Math.random() * 9, // Geomagnetic index
-                solarWind: Math.random() * 200 + 300, // Solar wind speed
-            });
-        }
+        // Group flares by day for chart
+        const flaresByDay = {};
+        const recentFlares = [];
 
-        // Generate recent flare events
-        const flares = [];
-        for (let i = 0; i < 5; i++) {
-            const eventTime = new Date(
-                now.getTime() - Math.random() * 24 * 60 * 60 * 1000
+        sortedFlares.forEach((flare) => {
+            const date = new Date(flare.beginTime).toISOString().split("T")[0];
+            const intensity = getFlareIntensity(flare.classType);
+
+            if (!flaresByDay[date]) {
+                flaresByDay[date] = {
+                    date,
+                    count: 0,
+                    totalIntensity: 0,
+                    maxIntensity: 0,
+                    flares: [],
+                };
+            }
+
+            flaresByDay[date].count++;
+            flaresByDay[date].totalIntensity += intensity;
+            flaresByDay[date].maxIntensity = Math.max(
+                flaresByDay[date].maxIntensity,
+                intensity
             );
-            const magnitude = Math.random();
-            let flareClass = "A";
-            if (magnitude > 0.8) flareClass = "X";
-            else if (magnitude > 0.6) flareClass = "M";
-            else if (magnitude > 0.4) flareClass = "C";
-            else if (magnitude > 0.2) flareClass = "B";
+            flaresByDay[date].flares.push(flare);
 
-            flares.push({
-                id: `FL${Date.now()}-${i}`,
-                class: flareClass,
-                magnitude: (magnitude * 10).toFixed(1),
-                time: eventTime,
-                duration: Math.floor(Math.random() * 120) + 30, // 30-150 minutes
-                location: `N${Math.floor(Math.random() * 40) + 10}W${
-                    Math.floor(Math.random() * 60) + 20
-                }`,
-                status: i === 0 ? "ongoing" : "completed",
-            });
-        }
+            // Add to recent flares (last 10)
+            if (recentFlares.length < 10) {
+                recentFlares.push({
+                    ...flare,
+                    intensity: intensity,
+                    color: getFlareColor(flare.classType),
+                });
+            }
+        });
 
-        const currentConditions = {
-            solarWindSpeed: Math.floor(Math.random() * 200) + 300,
-            geomagneticStorm: Math.random() > 0.7 ? "Minor" : "Quiet",
-            xrayBackground: (Math.random() * 0.00005 + 0.00001).toExponential(
-                1
-            ),
-            protonEvent: Math.random() > 0.8,
-            auroraForecast: Math.random() > 0.6 ? "Visible" : "Not Visible",
-            kpIndex: Math.floor(Math.random() * 9),
-        };
+        // Convert to chart data
+        const chartData = Object.values(flaresByDay).map((day) => ({
+            date: day.date,
+            count: day.count,
+            avgIntensity: Math.round(day.totalIntensity / day.count),
+            maxIntensity: day.maxIntensity,
+            displayDate: new Date(day.date).toLocaleDateString(),
+        }));
 
-        // Generate static example flares
-        const currentTime = new Date();
-        const exampleFlares = [
-            {
-                class: "M",
-                magnitude: "2.4",
-                time: new Date(currentTime.getTime() - 2 * 60 * 60 * 1000),
-                location: "N15W30",
-                status: "completed",
-            },
-            {
-                class: "C",
-                magnitude: "8.7",
-                time: new Date(currentTime.getTime() - 6 * 60 * 60 * 1000),
-                location: "S20E45",
-                status: "completed",
-            },
-            {
-                class: "B",
-                magnitude: "5.2",
-                time: new Date(currentTime.getTime() - 12 * 60 * 60 * 1000),
-                location: "N25W60",
-                status: "completed",
-            },
-        ];
-
-        setSolarData(currentConditions);
-        setFlareHistory(history);
-        setStaticFlares(exampleFlares);
-        setLoading(false);
+        return { chartData, recentFlares: recentFlares.reverse() };
     }, []);
 
-    useEffect(() => {
-        // Initialize data with a slight delay to avoid sync setState warning
-        const initialTimeout = setTimeout(generateSolarData, 0);
+    const generateFallbackData = useCallback(() => {
+        // Generate simulated data when API is unavailable
+        const data = [];
+        const recent = [];
 
-        // Set up interval for updates
-        const interval = setInterval(generateSolarData, 60000); // Update every minute
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split("T")[0];
 
-        return () => {
-            clearTimeout(initialTimeout);
-            clearInterval(interval);
-        };
-    }, [generateSolarData]);
+            const count = Math.floor(Math.random() * 8) + 1;
+            data.push({
+                date: dateStr,
+                count: count,
+                avgIntensity: Math.floor(Math.random() * 5) + 1,
+                maxIntensity: Math.floor(Math.random() * 8) + 2,
+                displayDate: date.toLocaleDateString(),
+            });
 
-    const getFlareColor = (flareClass) => {
-        switch (flareClass) {
-            case "X":
-                return "text-red-400 bg-red-500/20";
-            case "M":
-                return "text-orange-400 bg-orange-500/20";
-            case "C":
-                return "text-yellow-400 bg-yellow-500/20";
-            case "B":
-                return "text-blue-400 bg-blue-500/20";
-            default:
-                return "text-green-400 bg-green-500/20";
+            // Add some recent flares
+            if (i < 7) {
+                const flareClasses = ["C1.5", "C3.2", "M1.1", "M2.8", "X1.2"];
+                const randomClass =
+                    flareClasses[
+                        Math.floor(Math.random() * flareClasses.length)
+                    ];
+                recent.push({
+                    classType: randomClass,
+                    beginTime: date.toISOString(),
+                    peakTime: new Date(
+                        date.getTime() + 30 * 60000
+                    ).toISOString(),
+                    intensity: getFlareIntensity(randomClass),
+                    color: getFlareColor(randomClass),
+                    sourceLocation: `N${Math.floor(
+                        Math.random() * 30
+                    )}E${Math.floor(Math.random() * 60)}`,
+                });
+            }
         }
+
+        setFlareData(data);
+        setRecentFlares(recent.slice(0, 6));
+        setLastUpdated(new Date());
+    }, []);
+
+    const fetchSolarFlareData = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Get data for the last 30 days
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 30);
+
+            const formatDate = (date) => date.toISOString().split("T")[0];
+
+            const response = await fetch(
+                `${dashboardConfig.apis.nasa.endpoints.solarFlares}?` +
+                    `startDate=${formatDate(startDate)}&` +
+                    `endDate=${formatDate(endDate)}&` +
+                    `api_key=${dashboardConfig.apis.nasa.apiKey}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}: ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (Array.isArray(data) && data.length > 0) {
+                // Process flare data for charts
+                const processedData = processFlareData(data);
+                setFlareData(processedData.chartData);
+                setRecentFlares(processedData.recentFlares);
+                setLastUpdated(new Date());
+            } else {
+                // No flares in the period - create empty state
+                setFlareData([]);
+                setRecentFlares([]);
+                setLastUpdated(new Date());
+            }
+        } catch (err) {
+            console.error("Error fetching solar flare data:", err);
+            setError(err.message);
+
+            // Fallback to simulated data if API fails
+            setTimeout(() => generateFallbackData(), 0);
+        } finally {
+            setLoading(false);
+        }
+    }, [processFlareData, generateFallbackData]);
+
+    const getFlareIntensity = (classType) => {
+        if (!classType) return 1;
+        const type = classType.toString().toUpperCase();
+        if (type.includes("X")) return 10;
+        if (type.includes("M")) return 5;
+        if (type.includes("C")) return 2;
+        if (type.includes("B")) return 1;
+        return 1;
     };
 
-    const getKpColor = (kp) => {
-        if (kp >= 7) return "text-red-400";
-        if (kp >= 5) return "text-orange-400";
-        if (kp >= 3) return "text-yellow-400";
-        return "text-green-400";
+    const getFlareColor = (classType) => {
+        if (!classType) return "#8B5CF6";
+        const type = classType.toString().toUpperCase();
+        if (type.includes("X")) return "#EF4444"; // Red - Extreme
+        if (type.includes("M")) return "#F97316"; // Orange - Major
+        if (type.includes("C")) return "#EAB308"; // Yellow - Moderate
+        return "#8B5CF6"; // Purple - Minor
     };
+
+    useEffect(() => {
+        fetchSolarFlareData();
+
+        // Auto-refresh every hour
+        const interval = setInterval(() => {
+            setTimeout(fetchSolarFlareData, 0);
+        }, dashboardConfig.refreshRates.neo);
+
+        return () => clearInterval(interval);
+    }, [fetchSolarFlareData]);
 
     if (loading) {
         return (
-            <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white mb-4">
-                    Solar Activity Monitor
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[...Array(4)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="bg-black/30 backdrop-blur-md rounded-xl p-6 border border-white/10 animate-pulse"
-                        >
-                            <div className="h-48 bg-gray-600 rounded"></div>
-                        </div>
-                    ))}
+            <div className="glass-panel p-6 h-full flex items-center justify-center">
+                <div className="text-center">
+                    <Sun className="w-8 h-8 text-orange-400 mx-auto mb-4 animate-spin" />
+                    <p className="text-white/80">
+                        Loading Real Solar Flare Data...
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">
-                    Solar Activity Monitor
-                </h2>
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                    <Activity className="w-4 h-4" />
-                    Real-time Space Weather
+        <div className="glass-panel p-6 h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Sun className="w-6 h-6 text-orange-400" />
+                        <Activity className="w-3 h-3 text-red-400 absolute -top-1 -right-1" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">
+                            Solar Activity Monitor
+                        </h3>
+                        <p className="text-sm text-white/60">
+                            Real NASA DONKI Data {error && "• Fallback Mode"}
+                        </p>
+                    </div>
                 </div>
+                {lastUpdated && (
+                    <div className="text-right">
+                        <p className="text-xs text-white/40 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {lastUpdated.toLocaleTimeString()}
+                        </p>
+                    </div>
+                )}
             </div>
 
-            {/* Current Conditions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sun className="w-5 h-5 text-yellow-400" />
-                        <span className="text-sm text-gray-300">
-                            Solar Wind
-                        </span>
-                    </div>
-                    <div className="text-lg font-bold text-yellow-400">
-                        {solarData?.solarWindSpeed} km/s
-                    </div>
-                </div>
-
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Zap className="w-5 h-5 text-purple-400" />
-                        <span className="text-sm text-gray-300">Kp Index</span>
-                    </div>
-                    <div
-                        className={`text-lg font-bold ${getKpColor(
-                            solarData?.kpIndex
-                        )}`}
-                    >
-                        {solarData?.kpIndex?.toFixed(1)}
-                    </div>
-                </div>
-
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-5 h-5 text-red-400" />
-                        <span className="text-sm text-gray-300">
-                            Geomagnetic
-                        </span>
-                    </div>
-                    <div className="text-lg font-bold text-white">
-                        {solarData?.geomagneticStorm}
-                    </div>
-                </div>
-
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Activity className="w-5 h-5 text-blue-400" />
-                        <span className="text-sm text-gray-300">
-                            X-ray Flux
-                        </span>
-                    </div>
-                    <div className="text-lg font-bold text-blue-400">
-                        {solarData?.xrayBackground}
-                    </div>
-                </div>
-
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <BarChart3 className="w-5 h-5 text-green-400" />
-                        <span className="text-sm text-gray-300">Aurora</span>
-                    </div>
-                    <div className="text-lg font-bold text-green-400">
-                        {solarData?.auroraForecast}
-                    </div>
-                </div>
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                        Solar Wind Speed (24h)
-                    </h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={flareHistory}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#374151"
-                                />
-                                <XAxis
-                                    dataKey="time"
-                                    stroke="#9CA3AF"
-                                    fontSize={12}
-                                    interval="preserveStartEnd"
-                                />
-                                <YAxis stroke="#9CA3AF" fontSize={12} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="solarWind"
-                                    stroke="#3B82F6"
-                                    fill="#3B82F6"
-                                    fillOpacity={0.2}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                <div className="bg-black/30 backdrop-blur-md rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                        Geomagnetic Activity (Kp Index)
-                    </h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={flareHistory}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#374151"
-                                />
-                                <XAxis
-                                    dataKey="time"
-                                    stroke="#9CA3AF"
-                                    fontSize={12}
-                                    interval="preserveStartEnd"
-                                />
-                                <YAxis
-                                    stroke="#9CA3AF"
-                                    fontSize={12}
-                                    domain={[0, 9]}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="kpIndex"
-                                    stroke="#8B5CF6"
-                                    strokeWidth={2}
-                                    dot={{
-                                        fill: "#8B5CF6",
-                                        strokeWidth: 0,
-                                        r: 3,
-                                    }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent Solar Flares */}
-            <div className="bg-black/30 backdrop-blur-md rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    Recent Solar Flares
-                </h3>
-
-                <div className="space-y-3">
-                    {staticFlares.map((flare, index) => {
-                        const flareColor = getFlareColor(flare.class);
-                        return (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span
-                                        className={`px-2 py-1 rounded text-sm font-bold ${flareColor}`}
-                                    >
-                                        {flare.class}
-                                        {flare.magnitude}
-                                    </span>
-                                    <div>
-                                        <div className="text-white font-medium">
-                                            {flare.time.toLocaleTimeString()}
-                                        </div>
-                                        <div className="text-gray-400 text-sm">
-                                            Location: {flare.location}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div
-                                        className={`text-sm font-medium ${
-                                            flare.status === "ongoing"
-                                                ? "text-yellow-400"
-                                                : "text-gray-400"
-                                        }`}
-                                    >
-                                        {flare.status}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Alert Banner */}
-            {solarData?.protonEvent && (
-                <div className="bg-red-500/20 backdrop-blur-md rounded-xl p-4 border border-red-500/30">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="w-6 h-6 text-red-400" />
-                        <div>
-                            <div className="text-red-300 font-semibold">
-                                Solar Proton Event in Progress
-                            </div>
-                            <div className="text-red-200 text-sm">
-                                Elevated proton levels detected. Satellite
-                                operations may be affected.
-                            </div>
-                        </div>
+            {error && (
+                <div className="bg-orange-500/20 border border-orange-400/30 rounded-lg p-3 mb-4">
+                    <div className="flex items-center gap-2 text-orange-300 text-sm">
+                        <AlertTriangle className="w-4 h-4" />
+                        API temporarily unavailable - showing simulated data
                     </div>
                 </div>
             )}
 
-            {/* Info */}
-            <div className="bg-black/20 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                <div className="text-sm text-gray-300">
-                    <p className="mb-2">
-                        <strong className="text-white">
-                            Space Weather Monitoring:
-                        </strong>{" "}
-                        Solar flares are classified by X-ray intensity: A
-                        (smallest), B, C, M, and X (largest). The Kp index
-                        measures geomagnetic disturbance.
-                    </p>
-                    <p>
-                        High solar activity can affect satellite communications,
-                        GPS accuracy, and create beautiful auroras at higher
-                        latitudes.
-                    </p>
+            <div className="flex-1 space-y-6">
+                {/* Activity Chart */}
+                <div>
+                    <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-blue-400" />
+                        30-Day Solar Flare Activity
+                    </h4>
+                    <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={flareData}>
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="rgba(255,255,255,0.1)"
+                                />
+                                <XAxis
+                                    dataKey="displayDate"
+                                    stroke="rgba(255,255,255,0.6)"
+                                    fontSize={10}
+                                    interval="preserveStartEnd"
+                                />
+                                <YAxis
+                                    stroke="rgba(255,255,255,0.6)"
+                                    fontSize={10}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: "rgba(0,0,0,0.9)",
+                                        border: "1px solid rgba(255,255,255,0.2)",
+                                        borderRadius: "8px",
+                                        fontSize: "12px",
+                                    }}
+                                />
+                                <Bar
+                                    dataKey="count"
+                                    fill="#F97316"
+                                    name="Flares"
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Recent Flares */}
+                <div>
+                    <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-yellow-400" />
+                        Recent Solar Flares
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {recentFlares.length > 0 ? (
+                            recentFlares.map((flare, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className="w-3 h-3 rounded-full"
+                                            style={{
+                                                backgroundColor: flare.color,
+                                            }}
+                                        ></div>
+                                        <div>
+                                            <div className="text-white font-medium">
+                                                Class{" "}
+                                                {flare.classType || "Unknown"}
+                                            </div>
+                                            <div className="text-white/60 text-sm">
+                                                {flare.sourceLocation ||
+                                                    "Unknown location"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right text-sm text-white/80">
+                                        {new Date(
+                                            flare.beginTime
+                                        ).toLocaleDateString()}
+                                        <br />
+                                        <span className="text-xs text-white/50">
+                                            {new Date(
+                                                flare.beginTime
+                                            ).toLocaleTimeString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-white/60">
+                                <Sun className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <p>No recent solar flare activity</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
-}
+};
+
+export default RealSolarFlareMonitor;

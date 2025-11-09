@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import RealNEOTracker from "./RealNEOTracker";
 import SimpleMarsWeather from "./SimpleMarsWeather";
-import RealSolarFlareMonitor from "./RealSolarFlareMonitor";
+import SolarFlareMonitor from "./SolarFlareMonitor";
 import ISSTracker from "./ISSTracker";
 import ExoplanetDiscovery from "./ExoplanetDiscovery";
+import AstronomicalEvents from "./AstronomicalEvents";
 
-export default function EnhancedDashboard() {
+export default function Dashboard() {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [activeSection, setActiveSection] = useState("overview");
     const [mounted, setMounted] = useState(false);
@@ -56,6 +57,7 @@ export default function EnhancedDashboard() {
         { id: "iss", label: "ISS Tracker", icon: Satellite },
         { id: "mars", label: "Mars Weather", icon: Sun },
         { id: "exoplanets", label: "Exoplanets", icon: Telescope },
+        { id: "events", label: "Celestial Events", icon: Calendar },
         { id: "solar", label: "Space Weather", icon: Activity },
     ];
 
@@ -196,7 +198,7 @@ export default function EnhancedDashboard() {
                         </div>
 
                         {/* Compact Preview Cards */}
-                        <div className="grid grid-cols-2 gap-3 flex-1 overflow-hidden">
+                        <div className="grid grid-cols-3 gap-3 flex-1 overflow-hidden">
                             <div className="bg-black/40 backdrop-blur-md rounded-lg p-4 border border-white/20 h-full flex flex-col">
                                 <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                                     <Satellite className="w-5 h-5 text-blue-400" />
@@ -263,6 +265,39 @@ export default function EnhancedDashboard() {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="bg-black/40 backdrop-blur-md rounded-lg p-4 border border-white/20 h-full flex flex-col">
+                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                    <Calendar className="w-5 h-5 text-yellow-400" />
+                                    Upcoming Events
+                                </h3>
+                                <div className="space-y-2 flex-1">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">
+                                            Quadrantids Peak:
+                                        </span>
+                                        <span className="text-yellow-400 font-semibold">
+                                            Jan 4, 2026
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">
+                                            Mars Opposition:
+                                        </span>
+                                        <span className="text-red-400 font-semibold">
+                                            Jan 16, 2026
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">
+                                            Next Eclipse:
+                                        </span>
+                                        <span className="text-purple-400 font-semibold">
+                                            Mar 14, 2026
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -287,9 +322,14 @@ export default function EnhancedDashboard() {
                         <ExoplanetDiscovery />
                     </div>
                 )}
+                {activeSection === "events" && (
+                    <div className="h-full overflow-hidden">
+                        <AstronomicalEvents />
+                    </div>
+                )}
                 {activeSection === "solar" && (
                     <div className="h-full overflow-hidden">
-                        <RealSolarFlareMonitor />
+                        <SolarFlareMonitor />
                     </div>
                 )}
             </div>
