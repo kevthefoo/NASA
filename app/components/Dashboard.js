@@ -18,8 +18,6 @@ import Header from "@/app/components/Header";
 import RealNEOTracker from "./RealNEOTracker";
 import SimpleMarsWeather from "./SimpleMarsWeather";
 import SolarFlareMonitor from "./SolarFlareMonitor";
-import ISSTracker from "./ISSTracker";
-import ExoplanetDiscovery from "./ExoplanetDiscovery";
 import AstronomicalEvents from "./AstronomicalEvents";
 
 export default function Dashboard() {
@@ -55,9 +53,7 @@ export default function Dashboard() {
     const sections = [
         { id: "overview", label: "Mission Control", icon: Star },
         { id: "asteroids", label: "Asteroid Watch", icon: AlertTriangle },
-        { id: "iss", label: "ISS Tracker", icon: Satellite },
         { id: "mars", label: "Mars Weather", icon: Sun },
-        { id: "exoplanets", label: "Exoplanets", icon: Telescope },
         { id: "events", label: "Celestial Events", icon: Calendar },
         { id: "solar", label: "Solar Activity", icon: Activity },
     ];
@@ -274,19 +270,9 @@ export default function Dashboard() {
                         <RealNEOTracker />
                     </div>
                 )}
-                {activeSection === "iss" && (
-                    <div className="h-full overflow-hidden">
-                        <ISSTracker />
-                    </div>
-                )}
                 {activeSection === "mars" && (
                     <div className="h-full overflow-hidden">
                         <SimpleMarsWeather />
-                    </div>
-                )}
-                {activeSection === "exoplanets" && (
-                    <div className="h-full overflow-hidden">
-                        <ExoplanetDiscovery />
                     </div>
                 )}
                 {activeSection === "events" && (
