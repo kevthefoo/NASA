@@ -6,11 +6,9 @@ import {
     Star,
     Activity,
     AlertTriangle,
-    Camera,
     Sun,
     Calendar,
     Globe,
-    Zap,
     Satellite,
     Telescope,
 } from "lucide-react";
@@ -52,10 +50,10 @@ export default function Dashboard() {
 
     const sections = [
         { id: "overview", label: "Mission Control", icon: Star },
-        { id: "asteroids", label: "Asteroid Watch", icon: AlertTriangle },
-        { id: "mars", label: "Mars Weather", icon: Sun },
-        { id: "events", label: "Celestial Events", icon: Calendar },
         { id: "solar", label: "Solar Activity", icon: Activity },
+        { id: "mars", label: "Mars Weather", icon: Sun },
+        { id: "asteroids", label: "Asteroid Watch", icon: AlertTriangle },
+        { id: "events", label: "Celestial Events", icon: Calendar },
     ];
 
     return (
@@ -265,24 +263,27 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {activeSection === "asteroids" && (
+                {activeSection === "solar" && (
                     <div className="h-full overflow-hidden">
-                        <NEOTracker />
+                        <SolarFlareMonitor />
                     </div>
                 )}
+
                 {activeSection === "mars" && (
                     <div className="h-full overflow-hidden">
                         <MarsWeather />
                     </div>
                 )}
+
+                {activeSection === "asteroids" && (
+                    <div className="h-full overflow-hidden">
+                        <NEOTracker />
+                    </div>
+                )}
+
                 {activeSection === "events" && (
                     <div className="h-full overflow-hidden">
                         <AstronomicalEvents />
-                    </div>
-                )}
-                {activeSection === "solar" && (
-                    <div className="h-full overflow-hidden">
-                        <SolarFlareMonitor />
                     </div>
                 )}
             </div>
