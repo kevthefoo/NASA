@@ -5,7 +5,7 @@ import { Camera, Calendar, ExternalLink, Loader } from "lucide-react";
 import Image from "next/image";
 import { dashboardConfig } from "../config/dashboard";
 
-export default function RealAPOD() {
+export default function APOD() {
     const [apod, setApod] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

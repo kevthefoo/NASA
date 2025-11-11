@@ -15,7 +15,7 @@ import {
     Telescope,
 } from "lucide-react";
 import Header from "@/app/components/Header";
-import RealNEOTracker from "./RealNEOTracker";
+import NEOTracker from "./NEOTracker";
 import MarsWeather from "./MarsWeather";
 import SolarFlareMonitor from "./SolarFlareMonitor";
 import AstronomicalEvents from "./AstronomicalEvents";
@@ -267,7 +267,7 @@ export default function Dashboard() {
 
                 {activeSection === "asteroids" && (
                     <div className="h-full overflow-hidden">
-                        <RealNEOTracker />
+                        <NEOTracker />
                     </div>
                 )}
                 {activeSection === "mars" && (

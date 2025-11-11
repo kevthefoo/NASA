@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, Target, Zap, Loader } from "lucide-react";
 import { dashboardConfig } from "../config/dashboard";
 
-export default function RealNEOTracker() {
+export default function NEOTracker() {
     const [neoData, setNeoData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
